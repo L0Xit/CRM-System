@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Bestellung #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('orders.list_orders') }}">Bestellungen</a></li>
+                <li class="breadcrumb-item active">Bestellung #{{ order.id }}</li>
+            </ol>
+        </nav>
+        <h1>
+            <i class="bi bi-cart3"></i> Bestellung #{{ order.id }}
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Bestellpositionen -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Bestellpositionen</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Produkt</th>
+                                <th>SKU</th>
+                                <th class="text-end">Menge</th>
+                                <th class="text-end">Einzelpreis</th>
+                                <th class="text-end">Summe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.product.sku }}</td>
+                                <td class="text-end">{{ item.quantity }}</td>
+                                <td class="text-end">{{ item.unit_price|currency }}</td>
+                                <td class="text-end"><strong>{{ item.subtotal|currency }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <td colspan="4" class="text-end"><strong>Gesamtsumme:</strong></td>
+                                <td class="text-end"><strong class="fs-5">{{ order.total_amount|currency }}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Bestellinformationen -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Bestellinformationen</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">
+                    <strong>Status:</strong><br>
+                    <span class="badge {% if order.status == 'Offen' %}bg-warning{% else %}bg-success{% endif %}">
+                        {{ order.status }}
+                    </span>
+                </p>
+                <p class="mb-2">
+                    <strong>Bestelldatum:</strong><br>
+                    {{ order.order_date|datetime_format }}
+                </p>
+                <p class="mb-2">
+                    <strong>Anzahl Positionen:</strong><br>
+                    {{ order.item_count }}
+                </p>
+                <p class="mb-0">
+                    <strong>Gesamtsumme:</strong><br>
+                    <span class="fs-4">{{ order.total_amount|currency }}</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Kundeninformationen -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Kunde</h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ order.customer.full_name }}</h6>
+                <p class="mb-1 small">
+                    <i class="bi bi-envelope"></i> {{ order.customer.email or 'Keine E-Mail' }}
+                </p>
+                <p class="mb-3 small">
+                    <i class="bi bi-telephone"></i> {{ order.customer.phone or 'Kein Telefon' }}
+                </p>
+                <a href="{{ url_for('customers.customer_detail', customer_id=order.customer.id) }}" 
+                   class="btn btn-sm btn-outline-primary w-100">
+                    <i class="bi bi-eye"></i> Kundendetails anzeigen
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

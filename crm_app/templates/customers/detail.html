@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.full_name }} - Details{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('customers.list_customers') }}">Kunden</a></li>
+                <li class="breadcrumb-item active">{{ customer.full_name }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- Kunden-Header -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h2 class="mb-2">
+                            <i class="bi bi-person-circle text-primary"></i> {{ customer.full_name }}
+                        </h2>
+                        <p class="mb-2 text-muted">
+                            Kundennummer: <strong>#{{ customer.id }}</strong>
+                        </p>
+                        {% set score = customer.get_customer_score() %}
+                        <div class="mb-2">
+                            <span class="badge bg-{{ score.color }} fs-6 me-2" 
+                                  data-bs-toggle="tooltip" 
+                                  data-bs-placement="right"
+                                  title="Score-Details: Umsatz {{ score.revenue_score }}/40, Bestellungen {{ score.order_score }}/30, Kontakte {{ score.contact_score }}/30">
+                                <i class="bi bi-star-fill"></i> {{ score.rating }} - {{ score.label }}
+                            </span>
+                            <small class="text-muted">Gesamtscore: {{ score.score }}/100 Punkte</small>
+                        </div>
+                        <div class="mt-2">
+                            <span class="badge bg-light text-dark border">
+                                <i class="bi bi-envelope"></i> {{ customer.email or 'Keine E-Mail' }}
+                            </span>
+                            <span class="badge bg-light text-dark border ms-2">
+                                <i class="bi bi-telephone"></i> {{ customer.phone or 'Kein Telefon' }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <a href="{{ url_for('orders.new_order', customer_id=customer.id) }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Neue Bestellung
+                        </a>
+                        <a href="{{ url_for('contacts.new_contact', customer_id=customer.id) }}" class="btn btn-success">
+                            <i class="bi bi-chat-left-text"></i> Neuer Kontakt
+                        </a>
+                        <a href="{{ url_for('customers.edit_customer', customer_id=customer.id) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil"></i> Bearbeiten
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Kontaktdaten -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-calendar-plus"></i> Kundeninformation
+                </h5>
+                <hr>
+                <p class="mb-2">
+                    <i class="bi bi-calendar-check"></i> <strong>Kunde seit:</strong><br>
+                    <span class="text-muted">{{ customer.created_at|datetime_format }}</span>
+                </p>
+                <p class="mb-0">
+                    <i class="bi bi-clock-history"></i> <strong>Letzter Kontakt:</strong><br>
+                    <span class="text-muted">
+                    {% if customer.last_contact_date %}
+                        {{ customer.last_contact_date|datetime_format }}
+                    {% else %}
+                        Kein Kontakt
+                    {% endif %}
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-graph-up"></i> Aktivität
+                </h5>
+                <hr>
+                <p class="mb-2">
+                    <i class="bi bi-cart3"></i> <strong>Bestellungen:</strong><br>
+                    <span class="badge bg-success">{{ order_count }}</span>
+                </p>
+                <p class="mb-0">
+                    <i class="bi bi-chat-dots"></i> <strong>Kontakte:</strong><br>
+                    <span class="badge bg-info">{{ contact_count }}</span>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-{{ score.color }} border-2">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-award"></i> Kundenbewertung
+                </h5>
+                <hr>
+                <div class="text-center">
+                    <div class="display-4 text-{{ score.color }} mb-2">{{ score.rating }}</div>
+                    <h5 class="text-{{ score.color }}">{{ score.label }}</h5>
+                    <div class="progress mt-3" style="height: 25px;">
+                        <div class="progress-bar bg-{{ score.color }}" role="progressbar" 
+                             style="width: {{ score.score }}%;" 
+                             aria-valuenow="{{ score.score }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            {{ score.score }}/100
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        Umsatz: {{ score.revenue_score }}/40 | 
+                        Bestellungen: {{ score.order_score }}/30 | 
+                        Kontakte: {{ score.contact_score }}/30
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KPIs -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2">Umsatz Gesamt</h6>
+                <h2 class="card-title mb-0">{{ total_revenue|currency }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2">Umsatz 2024</h6>
+                <h2 class="card-title mb-0">{{ last_year_revenue|currency }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card {% if filtered_revenue is not none %}bg-warning{% else %}bg-secondary{% endif %} text-white">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2">Umsatz Zeitraum</h6>
+                <h2 class="card-title mb-0">
+                    {% if filtered_revenue is not none %}
+                        {{ filtered_revenue|currency }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Datumsfilter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">
+            <i class="bi bi-calendar-range"></i> Umsatz nach Zeitraum filtern
+        </h5>
+        <form action="{{ url_for('customers.customer_detail', customer_id=customer.id) }}" method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="date_from" class="form-label">Von:</label>
+                <input type="date" class="form-control" id="date_from" name="from" 
+                       value="{{ date_from or '' }}" required>
+            </div>
+            <div class="col-md-4">
+                <label for="date_to" class="form-label">Bis:</label>
+                <input type="date" class="form-control" id="date_to" name="to" 
+                       value="{{ date_to or '' }}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label d-block">&nbsp;</label>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-filter"></i> Anwenden
+                </button>
+                <a href="{{ url_for('customers.customer_detail', customer_id=customer.id) }}" 
+                   class="btn btn-secondary">
+                    <i class="bi bi-x"></i> Zurücksetzen
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabs -->
+<ul class="nav nav-tabs mb-3" id="customerTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" 
+                type="button" role="tab">
+            <i class="bi bi-cart3"></i> Letzte Bestellungen
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="contacts-tab" data-bs-toggle="tab" data-bs-target="#contacts" 
+                type="button" role="tab">
+            <i class="bi bi-chat-dots"></i> Letzte Kontakte
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" 
+                type="button" role="tab">
+            <i class="bi bi-info-circle"></i> Stammdaten
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="customerTabsContent">
+    <!-- Tab: Bestellungen -->
+    <div class="tab-pane fade show active" id="orders" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Bestell#</th>
+                                <th>Datum</th>
+                                <th>Positionen</th>
+                                <th>Status</th>
+                                <th>Summe</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td><strong>#{{ order.id }}</strong></td>
+                                <td>{{ order.order_date|datetime_format }}</td>
+                                <td>{{ order.item_count }}</td>
+                                <td>
+                                    <span class="badge {% if order.status == 'Offen' %}bg-warning{% else %}bg-success{% endif %}">
+                                        {{ order.status }}
+                                    </span>
+                                </td>
+                                <td><strong>{{ order.total_amount|currency }}</strong></td>
+                                <td>
+                                    <a href="{{ url_for('orders.order_detail', order_id=order.id) }}" 
+                                       class="btn btn-sm btn-primary">
+                                        <i class="bi bi-eye"></i> Details
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    Keine Bestellungen vorhanden
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if order_count > 10 %}
+                <div class="text-center">
+                    <a href="{{ url_for('customers.customer_orders', customer_id=customer.id) }}" 
+                       class="btn btn-outline-primary">
+                        Alle {{ order_count }} Bestellungen anzeigen
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab: Kontakte -->
+    <div class="tab-pane fade" id="contacts" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <div class="timeline">
+                    {% for contact in recent_contacts %}
+                    <div class="timeline-item mb-4">
+                        <div class="d-flex">
+                            <div class="timeline-marker">
+                                <span class="badge bg-info rounded-circle p-2">
+                                    {% if contact.channel == 'Telefon' %}
+                                        <i class="bi bi-telephone"></i>
+                                    {% elif contact.channel == 'E-Mail' %}
+                                        <i class="bi bi-envelope"></i>
+                                    {% elif contact.channel == 'Meeting' %}
+                                        <i class="bi bi-calendar-event"></i>
+                                    {% else %}
+                                        <i class="bi bi-chat"></i>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="d-flex justify-content-between">
+                                    <h6>{{ contact.subject or 'Kein Betreff' }}</h6>
+                                    <small class="text-muted">{{ contact.contact_time|datetime_format }}</small>
+                                </div>
+                                <p class="mb-1">
+                                    <span class="badge bg-info">{{ contact.channel }}</span>
+                                    {% if contact.user %}
+                                        <span class="text-muted">| Mitarbeiter: {{ contact.user.name }}</span>
+                                    {% endif %}
+                                </p>
+                                {% if contact.notes %}
+                                <p class="mb-0 text-muted">{{ contact.notes }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted py-4">
+                        Keine Kontakte vorhanden
+                    </p>
+                    {% endfor %}
+                </div>
+                {% if contact_count > 10 %}
+                <div class="text-center">
+                    <a href="{{ url_for('customers.customer_contacts', customer_id=customer.id) }}" 
+                       class="btn btn-outline-info">
+                        Alle {{ contact_count }} Kontakte anzeigen
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab: Stammdaten -->
+    <div class="tab-pane fade" id="info" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <form>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Vorname</label>
+                            <input type="text" class="form-control" value="{{ customer.first_name }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nachname</label>
+                            <input type="text" class="form-control" value="{{ customer.last_name }}" readonly>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">E-Mail</label>
+                            <input type="email" class="form-control" value="{{ customer.email or '' }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Telefon</label>
+                            <input type="tel" class="form-control" value="{{ customer.phone or '' }}" readonly>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Kunde seit</label>
+                            <input type="text" class="form-control" value="{{ customer.created_at|datetime_format }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Kundennummer</label>
+                            <input type="text" class="form-control" value="#{{ customer.id }}" readonly>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('customers.edit_customer', customer_id=customer.id) }}" class="btn btn-primary">
+                        <i class="bi bi-pencil"></i> Bearbeiten
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Aktiviere Bootstrap Tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

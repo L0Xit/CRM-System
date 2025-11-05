@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Neue Bestellung{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('orders.list_orders') }}">Bestellungen</a></li>
+                <li class="breadcrumb-item active">Neue Bestellung</li>
+            </ol>
+        </nav>
+        <h1>
+            <i class="bi bi-cart-plus"></i> Neue Bestellung erstellen
+        </h1>
+    </div>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<form method="POST" action="{{ url_for('orders.new_order') }}" id="orderForm">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Bestelldaten</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="customer_id" class="form-label">Kunde <span class="text-danger">*</span></label>
+                            <select class="form-select" id="customer_id" name="customer_id" required>
+                                <option value="">-- Kunde auswählen --</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer.id }}" 
+                                        {% if selected_customer_id == customer.id %}selected{% endif %}>
+                                    {{ customer.full_name }} ({{ customer.email or 'Keine E-Mail' }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="Offen" selected>Offen</option>
+                                <option value="In Bearbeitung">In Bearbeitung</option>
+                                <option value="Abgeschlossen">Abgeschlossen</option>
+                                <option value="Storniert">Storniert</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="mb-3">Bestellpositionen</h6>
+                    <div id="orderItems">
+                        <!-- Erste Zeile -->
+                        <div class="row mb-3 order-item">
+                            <div class="col-md-6">
+                                <label class="form-label">Produkt</label>
+                                <select class="form-select product-select" name="product_id[]">
+                                    <option value="">-- Produkt auswählen --</option>
+                                    {% for product in products %}
+                                    <option value="{{ product.id }}" data-price="{{ product.base_price }}">
+                                        {{ product.name }} ({{ product.sku }}) - {{ product.base_price|currency }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Menge</label>
+                                <input type="number" class="form-control quantity-input" name="quantity[]" 
+                                       min="1" value="1">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Aktion</label>
+                                <button type="button" class="btn btn-danger w-100 remove-item" disabled>
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-outline-primary" id="addItem">
+                        <i class="bi bi-plus-circle"></i> Position hinzufügen
+                    </button>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('orders.list_orders') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Abbrechen
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Bestellung erstellen
+                </button>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-light mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-info-circle"></i> Hinweise
+                    </h6>
+                    <ul class="mb-0">
+                        <li>Wählen Sie zunächst einen Kunden aus</li>
+                        <li>Fügen Sie mindestens eine Bestellposition hinzu</li>
+                        <li>Die Gesamtsumme wird automatisch berechnet</li>
+                        <li>Das Bestelldatum wird automatisch gesetzt</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Vorschau Gesamtsumme</h6>
+                    <div class="text-center">
+                        <h2 id="totalPreview">€ 0,00</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const orderItemsContainer = document.getElementById('orderItems');
+    const addItemButton = document.getElementById('addItem');
+    const totalPreview = document.getElementById('totalPreview');
+    let itemCount = 1;
+
+    // Template für neue Zeile
+    const itemTemplate = `
+        <div class="row mb-3 order-item">
+            <div class="col-md-6">
+                <label class="form-label">Produkt</label>
+                <select class="form-select product-select" name="product_id[]">
+                    <option value="">-- Produkt auswählen --</option>
+                    {% for product in products %}
+                    <option value="{{ product.id }}" data-price="{{ product.base_price }}">
+                        {{ product.name }} ({{ product.sku }}) - {{ product.base_price|currency }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Menge</label>
+                <input type="number" class="form-control quantity-input" name="quantity[]" 
+                       min="1" value="1">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Aktion</label>
+                <button type="button" class="btn btn-danger w-100 remove-item">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+
+    // Position hinzufügen
+    addItemButton.addEventListener('click', function() {
+        const div = document.createElement('div');
+        div.innerHTML = itemTemplate;
+        orderItemsContainer.appendChild(div.firstElementChild);
+        itemCount++;
+        updateRemoveButtons();
+        attachEventListeners();
+    });
+
+    // Position entfernen
+    function attachEventListeners() {
+        document.querySelectorAll('.remove-item').forEach(button => {
+            button.addEventListener('click', function() {
+                if (itemCount > 1) {
+                    this.closest('.order-item').remove();
+                    itemCount--;
+                    updateRemoveButtons();
+                    calculateTotal();
+                }
+            });
+        });
+
+        // Gesamtsumme aktualisieren
+        document.querySelectorAll('.product-select, .quantity-input').forEach(element => {
+            element.addEventListener('change', calculateTotal);
+            element.addEventListener('input', calculateTotal);
+        });
+    }
+
+    // Entfernen-Buttons aktivieren/deaktivieren
+    function updateRemoveButtons() {
+        const removeButtons = document.querySelectorAll('.remove-item');
+        removeButtons.forEach(button => {
+            button.disabled = (itemCount === 1);
+        });
+    }
+
+    // Gesamtsumme berechnen
+    function calculateTotal() {
+        let total = 0;
+        document.querySelectorAll('.order-item').forEach(item => {
+            const select = item.querySelector('.product-select');
+            const quantityInput = item.querySelector('.quantity-input');
+            
+            if (select.value && quantityInput.value) {
+                const price = parseFloat(select.options[select.selectedIndex].dataset.price || 0);
+                const quantity = parseInt(quantityInput.value || 0);
+                total += price * quantity;
+            }
+        });
+
+        totalPreview.textContent = formatCurrency(total);
+    }
+
+    // Währung formatieren
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('de-AT', {
+            style: 'currency',
+            currency: 'EUR'
+        }).format(value);
+    }
+
+    // Initial
+    attachEventListeners();
+    calculateTotal();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Kontakt Details{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('contacts.list_contacts') }}">Kontakte</a></li>
+                <li class="breadcrumb-item active">Kontakt #{{ contact.id }}</li>
+            </ol>
+        </nav>
+        <h1>
+            <i class="bi bi-chat-dots"></i> Kontakt Details
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{ contact.subject or 'Kein Betreff' }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Notizen:</strong>
+                    <p class="mt-2">{{ contact.notes or 'Keine Notizen vorhanden' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Kontaktinformationen</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">
+                    <strong>Kontaktart:</strong><br>
+                    <span class="badge bg-info">{{ contact.channel }}</span>
+                </p>
+                <p class="mb-2">
+                    <strong>Datum/Zeit:</strong><br>
+                    {{ contact.contact_time|datetime_format }}
+                </p>
+                <p class="mb-0">
+                    <strong>Mitarbeiter:</strong><br>
+                    {{ contact.user.name if contact.user else 'Nicht zugeordnet' }}
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Kunde</h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ contact.customer.full_name }}</h6>
+                <p class="mb-1 small">
+                    <i class="bi bi-envelope"></i> {{ contact.customer.email or 'Keine E-Mail' }}
+                </p>
+                <p class="mb-3 small">
+                    <i class="bi bi-telephone"></i> {{ contact.customer.phone or 'Kein Telefon' }}
+                </p>
+                <a href="{{ url_for('customers.customer_detail', customer_id=contact.customer.id) }}" 
+                   class="btn btn-sm btn-outline-primary w-100">
+                    <i class="bi bi-eye"></i> Kundendetails anzeigen
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

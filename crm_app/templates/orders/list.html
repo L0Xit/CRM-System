@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Bestellungen{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>
+            <i class="bi bi-cart3"></i> Bestellungsübersicht
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Bestellungen</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('orders.new_order') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-cart-plus"></i> Neue Bestellung
+        </a>
+    </div>
+</div>
+
+<!-- Suchleiste -->
+<div class="row mb-3">
+    <div class="col">
+        <form action="{{ url_for('orders.list_orders') }}" method="get">
+            <div class="input-group">
+                <input type="text" class="form-control" name="q" value="{{ search_query }}"
+                       placeholder="Bestellnummer oder Kundenname suchen...">
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-search"></i> Suchen
+                </button>
+                {% if search_query %}
+                <a href="{{ url_for('orders.list_orders') }}" class="btn btn-secondary">
+                    <i class="bi bi-x"></i> Zurücksetzen
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bestellungstabelle -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Bestell#</th>
+                        <th>Datum</th>
+                        <th>Kunde</th>
+                        <th>Positionen</th>
+                        <th>Status</th>
+                        <th>Summe</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td><strong>#{{ order.id }}</strong></td>
+                        <td>{{ order.order_date|datetime_format }}</td>
+                        <td>
+                            <a href="{{ url_for('customers.customer_detail', customer_id=order.customer.id) }}">
+                                {{ order.customer.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ order.item_count }}</td>
+                        <td>
+                            <span class="badge {% if order.status == 'Offen' %}bg-warning{% elif order.status == 'Abgeschlossen' %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ order.status }}
+                            </span>
+                        </td>
+                        <td><strong>{{ order.total_amount|currency }}</strong></td>
+                        <td>
+                            <a href="{{ url_for('orders.order_detail', order_id=order.id) }}" 
+                               class="btn btn-sm btn-primary">
+                                <i class="bi bi-eye"></i> Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            {% if search_query %}
+                                Keine Bestellungen gefunden für "{{ search_query }}"
+                            {% else %}
+                                Keine Bestellungen vorhanden
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if pagination.pages > 1 %}
+<nav aria-label="Seitennavigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('orders.list_orders', page=pagination.prev_num, q=search_query) }}">
+                <i class="bi bi-chevron-left"></i> Zurück
+            </a>
+        </li>
+        
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('orders.list_orders', page=page_num, q=search_query) }}">
+                        {{ page_num }}
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('orders.list_orders', page=pagination.next_num, q=search_query) }}">
+                Weiter <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+<div class="text-muted text-center mt-3">
+    Seite {{ pagination.page }} von {{ pagination.pages }} | {{ pagination.total }} Bestellungen gesamt
+</div>
+{% endblock %}

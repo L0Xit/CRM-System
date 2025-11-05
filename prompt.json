@@ -1,0 +1,654 @@
+{
+  "project_info": {
+    "name": "Einfaches CRM System",
+    "description": "Schülerprojekt 5BHWI: Customer Relationship Management System mit Flask und SQLite",
+    "target_platform": "PythonAnywhere",
+    "framework": "Python Flask",
+    "database": "SQLite",
+    "locale": "de_AT",
+    "timezone": "Europe/Vienna"
+  },
+  "requirements": {
+    "core_features": [
+      "Globale Kundenübersicht mit Suchfunktion",
+      "Globale Bestellungsübersicht (chronologisch)",
+      "Globale Kontaktübersicht (chronologisch, filterbar)",
+      "Detaillierte Kundensicht mit KPIs",
+      "Umsatzberechnungen mit Datumsfiltern",
+      "Responsive Webdesign"
+    ],
+    "technical_requirements": [
+      "Flask Web Framework",
+      "SQLAlchemy ORM",
+      "SQLite Database",
+      "Jinja2 Templates",
+      "Bootstrap CSS Framework",
+      "German localization",
+      "Timezone-aware datetime handling",
+      "Pagination for large datasets",
+      "Search functionality",
+      "Data filtering and sorting"
+    ]
+  },
+  "ui_specifications": {
+    "main_dashboard": {
+      "description": "Startseite mit drei Hauptübersichten",
+      "components": [
+        {
+          "name": "Kundenübersicht",
+          "features": [
+            "Suchfeld für Name/E-Mail/Telefon",
+            "Tabelle mit Kund#, Name, E-Mail, letzter Aktivität",
+            "Sortierung nach Name, letztem Kontakt",
+            "Pagination",
+            "Klickbare Zeilen zu Kundendetails"
+          ]
+        },
+        {
+          "name": "Bestellungsübersicht",
+          "features": [
+            "Suchfeld für Bestellnummer/Kunde",
+            "Tabelle mit Bestell#, Kunde, Summe",
+            "Chronologische Sortierung (neueste zuerst)",
+            "Pagination"
+          ]
+        },
+        {
+          "name": "Kontaktübersicht",
+          "features": [
+            "Filter nach Kontaktart (Telefon, E-Mail, Meeting, Chat)",
+            "Tabelle mit Datum/Zeit, Kunde, Art, Betreff",
+            "Chronologische Sortierung (neueste zuerst)",
+            "Pagination"
+          ]
+        }
+      ]
+    },
+    "customer_detail": {
+      "description": "Detailansicht für einzelnen Kunden",
+      "components": [
+        {
+          "name": "Header",
+          "content": "Kundenname, Kundennummer, Kontaktdaten, letzter Kontakt"
+        },
+        {
+          "name": "KPIs",
+          "metrics": [
+            "Umsatz gesamt",
+            "Umsatz letztes Jahr (2024)",
+            "Umsatz im gewählten Datumsbereich"
+          ]
+        },
+        {
+          "name": "Datumsfilter",
+          "features": [
+            "Start- und Enddatum Picker",
+            "Anwenden und Zurücksetzen Buttons",
+            "Dynamische KPI-Aktualisierung"
+          ]
+        },
+        {
+          "name": "Tabs",
+          "tabs": [
+            {
+              "name": "Letzte Bestellungen",
+              "content": "Tabelle mit Bestell#, Datum, Positionen, Status, Summe"
+            },
+            {
+              "name": "Letzte Kontakte",
+              "content": "Timeline mit Datum, Art, Betreff, Mitarbeiter"
+            },
+            {
+              "name": "Stammdaten",
+              "content": "Bearbeitbare Kundendaten"
+            }
+          ]
+        },
+        {
+          "name": "Aktionen",
+          "buttons": [
+            "Neue Bestellung",
+            "Neuer Kontakt",
+            "Bearbeiten"
+          ]
+        }
+      ]
+    }
+  },
+  "database_schema": {
+    "tables": [
+      {
+        "name": "customers",
+        "fields": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "constraints": [
+              "PRIMARY KEY",
+              "AUTOINCREMENT"
+            ]
+          },
+          {
+            "name": "first_name",
+            "type": "VARCHAR(100)",
+            "constraints": [
+              "NOT NULL"
+            ]
+          },
+          {
+            "name": "last_name",
+            "type": "VARCHAR(100)",
+            "constraints": [
+              "NOT NULL"
+            ]
+          },
+          {
+            "name": "email",
+            "type": "VARCHAR(255)",
+            "constraints": [
+              "UNIQUE"
+            ]
+          },
+          {
+            "name": "phone",
+            "type": "VARCHAR(50)",
+            "constraints": []
+          },
+          {
+            "name": "created_at",
+            "type": "DATETIME",
+            "constraints": [
+              "DEFAULT CURRENT_TIMESTAMP"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "orders",
+        "fields": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "constraints": [
+              "PRIMARY KEY",
+              "AUTOINCREMENT"
+            ]
+          },
+          {
+            "name": "customer_id",
+            "type": "INTEGER",
+            "constraints": [
+              "NOT NULL"
+            ]
+          },
+          {
+            "name": "order_date",
+            "type": "DATETIME",
+            "constraints": [
+              "NOT NULL"
+            ]
+          },
+          {
+            "name": "status",
+            "type": "VARCHAR(20)",
+            "constraints": [
+              "DEFAULT 'Offen'"
+            ]
+          },
+          {
+            "name": "total_amount",
+            "type": "DECIMAL(10,2)",
+            "constraints": [
+              "NOT NULL"
+            ]
+          }
+        ],
+        "foreign_keys": [
+          {
+            "column": "customer_id",
+            "references": "customers(id)",
+            "on_delete": "CASCADE"
+          }
+        ],
+        "indexes": [
+          [
+            "order_date"
+          ],
+          [
+            "customer_id",
+            "order_date"
+          ]
+        ]
+      },
+      {
+        "name": "order_items",
+        "fields": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "constraints": [
+              "PRIMARY KEY",
+              "AUTOINCREMENT"
+            ]
+          },
+          {
+            "name": "order_id",
+            "type": "INTEGER",
+            "constraints": [
+              "NOT NULL"
+            ]
+          },
+          {
+            "name": "product_id",
+            "type": "INTEGER",
+            "constraints": [
+              "NOT NULL"
+            ]
+          },
+          {
+            "name": "quantity",
+            "type": "INTEGER",
+            "constraints": [
+              "NOT NULL"
+            ]
+          },
+          {
+            "name": "unit_price",
+            "type": "DECIMAL(10,2)",
+            "constraints": [
+              "NOT NULL"
+            ]
+          }
+        ],
+        "foreign_keys": [
+          {
+            "column": "order_id",
+            "references": "orders(id)",
+            "on_delete": "CASCADE"
+          },
+          {
+            "column": "product_id",
+            "references": "products(id)"
+          }
+        ]
+      },
+      {
+        "name": "products",
+        "fields": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "constraints": [
+              "PRIMARY KEY",
+              "AUTOINCREMENT"
+            ]
+          },
+          {
+            "name": "sku",
+            "type": "VARCHAR(100)",
+            "constraints": [
+              "UNIQUE"
+            ]
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR(255)",
+            "constraints": [
+              "NOT NULL"
+            ]
+          },
+          {
+            "name": "base_price",
+            "type": "DECIMAL(10,2)",
+            "constraints": [
+              "NOT NULL"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "contacts",
+        "fields": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "constraints": [
+              "PRIMARY KEY",
+              "AUTOINCREMENT"
+            ]
+          },
+          {
+            "name": "customer_id",
+            "type": "INTEGER",
+            "constraints": [
+              "NOT NULL"
+            ]
+          },
+          {
+            "name": "user_id",
+            "type": "INTEGER",
+            "constraints": []
+          },
+          {
+            "name": "channel",
+            "type": "VARCHAR(20)",
+            "constraints": [
+              "NOT NULL"
+            ]
+          },
+          {
+            "name": "subject",
+            "type": "VARCHAR(255)",
+            "constraints": []
+          },
+          {
+            "name": "notes",
+            "type": "TEXT",
+            "constraints": []
+          },
+          {
+            "name": "contact_time",
+            "type": "DATETIME",
+            "constraints": [
+              "NOT NULL"
+            ]
+          }
+        ],
+        "foreign_keys": [
+          {
+            "column": "customer_id",
+            "references": "customers(id)",
+            "on_delete": "CASCADE"
+          }
+        ],
+        "indexes": [
+          [
+            "contact_time"
+          ],
+          [
+            "customer_id",
+            "contact_time"
+          ]
+        ]
+      },
+      {
+        "name": "users",
+        "fields": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "constraints": [
+              "PRIMARY KEY",
+              "AUTOINCREMENT"
+            ]
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR(100)",
+            "constraints": [
+              "NOT NULL"
+            ]
+          },
+          {
+            "name": "email",
+            "type": "VARCHAR(255)",
+            "constraints": [
+              "UNIQUE"
+            ]
+          },
+          {
+            "name": "password_hash",
+            "type": "VARCHAR(255)",
+            "constraints": []
+          },
+          {
+            "name": "role",
+            "type": "VARCHAR(20)",
+            "constraints": [
+              "DEFAULT 'Schüler'"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "api_routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "description": "Startansicht mit 3 Übersichten und Suchfeldern",
+      "parameters": []
+    },
+    {
+      "method": "GET",
+      "path": "/customers",
+      "description": "Kundenliste mit Suchfunktion",
+      "parameters": [
+        {
+          "name": "q",
+          "type": "string",
+          "description": "Suchbegriff für Name/Email/Telefon"
+        },
+        {
+          "name": "page",
+          "type": "int",
+          "description": "Seitennummer für Pagination"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/orders",
+      "description": "Globale Bestellungsübersicht",
+      "parameters": [
+        {
+          "name": "q",
+          "type": "string",
+          "description": "Suchbegriff für Bestellnummer/Kunde"
+        },
+        {
+          "name": "page",
+          "type": "int",
+          "description": "Seitennummer für Pagination"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/contacts",
+      "description": "Globale Kontaktübersicht",
+      "parameters": [
+        {
+          "name": "channel",
+          "type": "string",
+          "description": "Filter nach Kontaktart"
+        },
+        {
+          "name": "page",
+          "type": "int",
+          "description": "Seitennummer für Pagination"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/customers/<int:id>",
+      "description": "Kunden-Detailseite mit KPIs und Tabs",
+      "parameters": []
+    },
+    {
+      "method": "GET",
+      "path": "/customers/<int:id>/revenue",
+      "description": "Umsatzberechnung mit Datumsfilter",
+      "parameters": [
+        {
+          "name": "from",
+          "type": "date",
+          "description": "Startdatum (YYYY-MM-DD)"
+        },
+        {
+          "name": "to",
+          "type": "date",
+          "description": "Enddatum (YYYY-MM-DD)"
+        }
+      ]
+    }
+  ],
+  "sql_queries": {
+    "umsatz_gesamt": "SELECT SUM(total_amount) AS umsatz_gesamt FROM orders WHERE customer_id = ?",
+    "umsatz_letztes_jahr": "SELECT SUM(total_amount) AS umsatz_letztes_jahr FROM orders WHERE customer_id = ? AND order_date >= date('now', 'start of year', '-1 year') AND order_date < date('now', 'start of year')",
+    "umsatz_zeitraum": "SELECT SUM(total_amount) AS umsatz_zeitraum FROM orders WHERE customer_id = ? AND order_date BETWEEN ? AND ?",
+    "globale_bestellungen": "SELECT o.id, o.order_date, o.total_amount, (c.last_name || ', ' || c.first_name) AS kunde FROM orders o JOIN customers c ON c.id = o.customer_id WHERE (? IS NULL OR CAST(o.id AS TEXT) LIKE '%' || ? || '%') ORDER BY o.order_date DESC LIMIT 50 OFFSET ?",
+    "globale_kontakte": "SELECT ct.contact_time, ct.channel, ct.subject, (c.last_name || ', ' || c.first_name) AS kunde FROM contacts ct JOIN customers c ON c.id = ct.customer_id WHERE (? IS NULL OR ct.channel = ?) ORDER BY ct.contact_time DESC LIMIT 50 OFFSET ?"
+  },
+  "project_structure": {
+    "directories": [
+      "crm_app/",
+      "crm_app/templates/",
+      "crm_app/static/",
+      "crm_app/static/css/",
+      "crm_app/static/js/",
+      "crm_app/views/",
+      "crm_app/models/",
+      "migrations/"
+    ],
+    "files": [
+      {
+        "path": "app.py",
+        "description": "Haupt-Flask-Anwendung mit Konfiguration"
+      },
+      {
+        "path": "models.py",
+        "description": "SQLAlchemy Datenbankmodelle"
+      },
+      {
+        "path": "views/customers.py",
+        "description": "Kunden-bezogene Routen und Views"
+      },
+      {
+        "path": "views/orders.py",
+        "description": "Bestellungs-bezogene Routen und Views"
+      },
+      {
+        "path": "views/contacts.py",
+        "description": "Kontakt-bezogene Routen und Views"
+      },
+      {
+        "path": "templates/base.html",
+        "description": "Basis-Template mit Navigation und Layout"
+      },
+      {
+        "path": "templates/index.html",
+        "description": "Dashboard mit drei Hauptübersichten"
+      },
+      {
+        "path": "templates/customer_detail.html",
+        "description": "Kunden-Detailseite mit KPIs und Tabs"
+      },
+      {
+        "path": "static/css/style.css",
+        "description": "Custom CSS für Layout und Design"
+      },
+      {
+        "path": "requirements.txt",
+        "description": "Python-Dependencies"
+      },
+      {
+        "path": ".env.example",
+        "description": "Beispiel-Umgebungsvariablen"
+      },
+      {
+        "path": "wsgi.py",
+        "description": "WSGI-Entry-Point für PythonAnywhere"
+      },
+      {
+        "path": "migrations/init_db.py",
+        "description": "Datenbankinitialisierung und Testdaten"
+      }
+    ]
+  },
+  "deployment": {
+    "platform": "PythonAnywhere",
+    "requirements": [
+      "Flask>=2.0.0",
+      "SQLAlchemy>=1.4.0",
+      "Flask-SQLAlchemy>=2.5.0",
+      "python-dotenv>=0.19.0",
+      "Werkzeug>=2.0.0"
+    ],
+    "environment_variables": {
+      "FLASK_ENV": "production",
+      "SECRET_KEY": "change-me-in-production",
+      "SQLALCHEMY_DATABASE_URI": "sqlite:///app.db",
+      "TIMEZONE": "Europe/Vienna"
+    },
+    "database_setup": {
+      "type": "SQLite",
+      "file": "app.db",
+      "migration_method": "Upload database file or import SQL dump"
+    }
+  },
+  "sample_data": {
+    "customers": [
+      {
+        "first_name": "Anna",
+        "last_name": "Berger",
+        "email": "a.berger@example.com",
+        "phone": "+43 123 456789"
+      },
+      {
+        "first_name": "Max",
+        "last_name": "Huber",
+        "email": "m.huber@example.com",
+        "phone": "+43 987 654321"
+      }
+    ],
+    "products": [
+      {
+        "sku": "PROD-001",
+        "name": "Produkt Alpha",
+        "base_price": 29.99
+      },
+      {
+        "sku": "PROD-002",
+        "name": "Produkt Beta",
+        "base_price": 59.99
+      }
+    ],
+    "users": [
+      {
+        "name": "S. König",
+        "email": "s.koenig@example.com",
+        "role": "Lehrer"
+      },
+      {
+        "name": "L. Graf",
+        "email": "l.graf@example.com",
+        "role": "Schüler"
+      }
+    ]
+  },
+  "documentation_requirements": {
+    "setup_guide": [
+      "Plattform-Check und Datenbanktest",
+      "Voraussetzungen (Tools, Zugangsdaten)",
+      "Schritt-für-Schritt Installation",
+      "Smoke-Tests",
+      "Troubleshooting"
+    ],
+    "user_manual": [
+      "Übersicht der Hauptfunktionen",
+      "Suchfunktionen verwenden",
+      "Kunden-Details und KPIs",
+      "Datumsfilter anwenden"
+    ]
+  },
+  "grading_criteria": {
+    "datenbankdesign_migrationen": 10,
+    "funktionalitaet_muss": 10,
+    "codequalitaet_struktur": 10,
+    "ui_ux_usability": 10,
+    "dokumentation_setup": 50,
+    "praesentation_setup": 10
+  }
+}

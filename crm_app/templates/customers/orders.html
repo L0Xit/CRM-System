@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.full_name }} - Alle Bestellungen{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('customers.list_customers') }}">Kunden</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('customers.customer_detail', customer_id=customer.id) }}">{{ customer.full_name }}</a></li>
+                <li class="breadcrumb-item active">Alle Bestellungen</li>
+            </ol>
+        </nav>
+        <h1>
+            <i class="bi bi-cart3"></i> Alle Bestellungen von {{ customer.full_name }}
+        </h1>
+    </div>
+</div>
+
+<!-- Bestellungstabelle -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Bestell#</th>
+                        <th>Datum</th>
+                        <th>Positionen</th>
+                        <th>Status</th>
+                        <th>Summe</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td><strong>#{{ order.id }}</strong></td>
+                        <td>{{ order.order_date|datetime_format }}</td>
+                        <td>{{ order.item_count }}</td>
+                        <td>
+                            <span class="badge {% if order.status == 'Offen' %}bg-warning{% else %}bg-success{% endif %}">
+                                {{ order.status }}
+                            </span>
+                        </td>
+                        <td><strong>{{ order.total_amount|currency }}</strong></td>
+                        <td>
+                            <a href="{{ url_for('orders.order_detail', order_id=order.id) }}" 
+                               class="btn btn-sm btn-primary">
+                                <i class="bi bi-eye"></i> Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            Keine Bestellungen vorhanden
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if pagination.pages > 1 %}
+<nav aria-label="Seitennavigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('customers.customer_orders', customer_id=customer.id, page=pagination.prev_num) }}">
+                <i class="bi bi-chevron-left"></i> Zurück
+            </a>
+        </li>
+        
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('customers.customer_orders', customer_id=customer.id, page=page_num) }}">
+                        {{ page_num }}
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('customers.customer_orders', customer_id=customer.id, page=pagination.next_num) }}">
+                Weiter <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+<div class="text-center mt-3">
+    <a href="{{ url_for('customers.customer_detail', customer_id=customer.id) }}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left"></i> Zurück zu Kundendetails
+    </a>
+</div>
+{% endblock %}

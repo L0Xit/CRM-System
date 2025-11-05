@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Kontakte{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>
+            <i class="bi bi-chat-dots"></i> Kontaktübersicht
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Kontakte</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('contacts.new_contact') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-chat-left-text-fill"></i> Neuer Kontakt
+        </a>
+    </div>
+</div>
+
+<!-- Filter nach Kontaktart -->
+<div class="row mb-3">
+    <div class="col">
+        <form action="{{ url_for('contacts.list_contacts') }}" method="get">
+            <div class="input-group">
+                <label class="input-group-text">
+                    <i class="bi bi-filter"></i> Kontaktart:
+                </label>
+                <select class="form-select" name="channel">
+                    <option value="">Alle Kontaktarten</option>
+                    {% for channel in available_channels %}
+                    <option value="{{ channel }}" {% if channel_filter == channel %}selected{% endif %}>
+                        {{ channel }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-primary" type="submit">
+                    Filtern
+                </button>
+                {% if channel_filter %}
+                <a href="{{ url_for('contacts.list_contacts') }}" class="btn btn-secondary">
+                    <i class="bi bi-x"></i> Zurücksetzen
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Kontakttabelle -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Datum/Zeit</th>
+                        <th>Kunde</th>
+                        <th>Kontaktart</th>
+                        <th>Betreff</th>
+                        <th>Mitarbeiter</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contact in contacts %}
+                    <tr>
+                        <td>{{ contact.contact_time|datetime_format }}</td>
+                        <td>
+                            <a href="{{ url_for('customers.customer_detail', customer_id=contact.customer.id) }}">
+                                {{ contact.customer.full_name }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">
+                                {% if contact.channel == 'Telefon' %}
+                                    <i class="bi bi-telephone"></i>
+                                {% elif contact.channel == 'E-Mail' %}
+                                    <i class="bi bi-envelope"></i>
+                                {% elif contact.channel == 'Meeting' %}
+                                    <i class="bi bi-calendar-event"></i>
+                                {% else %}
+                                    <i class="bi bi-chat"></i>
+                                {% endif %}
+                                {{ contact.channel }}
+                            </span>
+                        </td>
+                        <td>{{ contact.subject or '-' }}</td>
+                        <td>{{ contact.user.name if contact.user else '-' }}</td>
+                        <td>
+                            <a href="{{ url_for('contacts.contact_detail', contact_id=contact.id) }}" 
+                               class="btn btn-sm btn-primary">
+                                <i class="bi bi-eye"></i> Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            {% if channel_filter %}
+                                Keine Kontakte vom Typ "{{ channel_filter }}" gefunden
+                            {% else %}
+                                Keine Kontakte vorhanden
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if pagination.pages > 1 %}
+<nav aria-label="Seitennavigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('contacts.list_contacts', page=pagination.prev_num, channel=channel_filter) }}">
+                <i class="bi bi-chevron-left"></i> Zurück
+            </a>
+        </li>
+        
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('contacts.list_contacts', page=page_num, channel=channel_filter) }}">
+                        {{ page_num }}
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('contacts.list_contacts', page=pagination.next_num, channel=channel_filter) }}">
+                Weiter <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+<div class="text-muted text-center mt-3">
+    Seite {{ pagination.page }} von {{ pagination.pages }} | {{ pagination.total }} Kontakte gesamt
+</div>
+{% endblock %}

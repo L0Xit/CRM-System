@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col">
+            <h1 class="display-5 fw-bold mb-2" style="color: var(--text-primary);">
+                <i class="bi bi-speedometer2" style="color: var(--primary-color);"></i> Dashboard
+            </h1>
+            <p class="text-muted fs-6">Übersicht über Kunden, Bestellungen und Kontakte</p>
+        </div>
+    </div>
+
+    <!-- Statistik-Karten mit modernem Grid -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="mb-1 opacity-75 fw-medium" style="font-size: 0.85rem; letter-spacing: 0.5px;">KUNDEN GESAMT</p>
+                            <h2 class="mb-0 fw-bold" style="font-size: 2.5rem;">{{ total_customers }}</h2>
+                        </div>
+                        <div class="p-3 bg-white bg-opacity-25 rounded-3">
+                            <i class="bi bi-people-fill" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="mb-1 opacity-75 fw-medium" style="font-size: 0.85rem; letter-spacing: 0.5px;">BESTELLUNGEN</p>
+                            <h2 class="mb-0 fw-bold" style="font-size: 2.5rem;">{{ total_orders }}</h2>
+                        </div>
+                        <div class="p-3 bg-white bg-opacity-25 rounded-3">
+                            <i class="bi bi-cart3" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="mb-1 opacity-75 fw-medium" style="font-size: 0.85rem; letter-spacing: 0.5px;">KONTAKTE</p>
+                            <h2 class="mb-0 fw-bold" style="font-size: 2.5rem;">{{ total_contacts }}</h2>
+                        </div>
+                        <div class="p-3 bg-white bg-opacity-25 rounded-3">
+                            <i class="bi bi-chat-dots" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="mb-1 opacity-75 fw-medium" style="font-size: 0.85rem; letter-spacing: 0.5px;">GESAMTUMSATZ</p>
+                            <h2 class="mb-0 fw-bold" style="font-size: 2.5rem;">{{ total_revenue|currency }}</h2>
+                        </div>
+                        <div class="p-3 bg-white bg-opacity-25 rounded-3">
+                            <i class="bi bi-currency-euro" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+    </div>
+
+    <!-- Moderne 2-Spalten-Layout -->
+    <div class="row g-4">
+        <!-- Linke Spalte: Kundenübersicht -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header border-0 bg-white pt-4 pb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="bi bi-person-lines-fill text-primary"></i> Neueste Kunden
+                        </h5>
+                        <a href="{{ url_for('customers.new_customer') }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-lg"></i> Neu
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body px-0 pb-0">
+                    {% if recent_customers %}
+                    <!-- Responsive Tabelle mit dynamischer Höhe -->
+                    <div class="table-responsive" style="{% if recent_customers|length > 8 %}max-height: 500px; overflow-y: auto;{% endif %}">
+                        <table class="table table-hover mb-0">
+                            <thead {% if recent_customers|length > 8 %}class="sticky-top"{% endif %}>
+                                <tr>
+                                    <th style="width: 15%;">Kund#</th>
+                                    <th style="width: 35%;">Name</th>
+                                    <th style="width: 35%;">E-Mail</th>
+                                    <th style="width: 15%;">Akt.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for customer in recent_customers %}
+                                <tr class="clickable-row" onclick="window.location='{{ url_for('customers.customer_detail', customer_id=customer.id) }}'">
+                                    <td class="fw-semibold text-primary">#{{ customer.id }}</td>
+                                    <td class="fw-medium">{{ customer.full_name }}</td>
+                                    <td class="text-muted small">{{ customer.email or '-' }}</td>
+                                    <td class="text-muted small">
+                                        {% if customer.last_contact_date %}
+                                            {{ customer.last_contact_date|relative_time }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <!-- Leer-Zustand mit schönem Design -->
+                    <div class="text-center py-5">
+                        <i class="bi bi-people text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+                        <h5 class="text-muted mt-3">Noch keine Kunden vorhanden</h5>
+                        <p class="text-muted small">Erstellen Sie Ihren ersten Kunden, um zu beginnen.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white border-0 pt-3">
+                    <a href="{{ url_for('customers.list_customers') }}" class="btn btn-outline-primary w-100">
+                        Alle Kunden anzeigen <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rechte Spalte: Bestellungen & Kontakte -->
+        <div class="col-lg-7">
+            <!-- Bestellungsübersicht -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header border-0 bg-white pt-4 pb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="bi bi-cart3 text-success"></i> Aktuelle Bestellungen
+                        </h5>
+                        <a href="{{ url_for('orders.new_order') }}" class="btn btn-sm btn-success">
+                            <i class="bi bi-plus-lg"></i> Neu
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body px-0 pb-0">
+                    {% if recent_orders %}
+                    <div class="table-responsive" style="{% if recent_orders|length > 5 %}max-height: 300px; overflow-y: auto;{% endif %}">
+                        <table class="table table-hover mb-0">
+                            <thead {% if recent_orders|length > 5 %}class="sticky-top"{% endif %}>
+                                <tr>
+                                    <th style="width: 25%;">Bestell#</th>
+                                    <th style="width: 45%;">Kunde</th>
+                                    <th style="width: 30%; text-align: right;">Summe</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr class="clickable-row" onclick="window.location='{{ url_for('orders.order_detail', order_id=order.id) }}'">
+                                    <td class="fw-semibold text-success">A-{{ '%05d'|format(order.id) }}</td>
+                                    <td class="fw-medium">{{ order.customer.full_name }}</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-success-subtle text-success">{{ order.total_amount|currency }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-cart-x text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <h6 class="text-muted mt-3">Noch keine Bestellungen</h6>
+                        <p class="text-muted small mb-0">Erstellen Sie die erste Bestellung.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white border-0 pt-3">
+                    <a href="{{ url_for('orders.list_orders') }}" class="btn btn-outline-success w-100">
+                        Alle Bestellungen anzeigen <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Kontaktübersicht -->
+            <div class="card shadow-sm">
+                <div class="card-header border-0 bg-white pt-4 pb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="bi bi-chat-dots text-info"></i> Letzte Kontakte
+                        </h5>
+                        <a href="{{ url_for('contacts.new_contact') }}" class="btn btn-sm btn-info">
+                            <i class="bi bi-plus-lg"></i> Neu
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body px-0 pb-0">
+                    {% if recent_contacts %}
+                    <div class="table-responsive" style="{% if recent_contacts|length > 5 %}max-height: 300px; overflow-y: auto;{% endif %}">
+                        <table class="table table-hover mb-0">
+                            <thead {% if recent_contacts|length > 5 %}class="sticky-top"{% endif %}>
+                                <tr>
+                                    <th style="width: 25%;">Datum/Zeit</th>
+                                    <th style="width: 35%;">Kunde</th>
+                                    <th style="width: 15%;">Art</th>
+                                    <th style="width: 25%;">Betreff</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contact in recent_contacts %}
+                                <tr class="clickable-row" onclick="window.location='{{ url_for('contacts.contact_detail', contact_id=contact.id) }}'">
+                                    <td class="small text-muted">{{ contact.contact_time|datetime_format('%d.%m. %H:%M') }}</td>
+                                    <td class="fw-medium">{{ contact.customer.full_name }}</td>
+                                    <td>
+                                        {% if contact.channel == 'Telefon' %}
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                <i class="bi bi-telephone"></i>
+                                            </span>
+                                        {% elif contact.channel == 'E-Mail' %}
+                                            <span class="badge bg-info-subtle text-info">
+                                                <i class="bi bi-envelope"></i>
+                                            </span>
+                                        {% elif contact.channel == 'Meeting' %}
+                                            <span class="badge bg-success-subtle text-success">
+                                                <i class="bi bi-people"></i>
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning-subtle text-warning">
+                                                <i class="bi bi-chat"></i>
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small text-truncate" style="max-width: 150px;">{{ contact.subject or '-' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-chat-left-dots text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <h6 class="text-muted mt-3">Noch keine Kontakte</h6>
+                        <p class="text-muted small mb-0">Erstellen Sie den ersten Kontakt.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white border-0 pt-3">
+                    <a href="{{ url_for('contacts.list_contacts') }}" class="btn btn-outline-info w-100">
+                        Alle Kontakte anzeigen <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.full_name }} - Alle Kontakte{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('customers.list_customers') }}">Kunden</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('customers.customer_detail', customer_id=customer.id) }}">{{ customer.full_name }}</a></li>
+                <li class="breadcrumb-item active">Alle Kontakte</li>
+            </ol>
+        </nav>
+        <h1>
+            <i class="bi bi-chat-dots"></i> Alle Kontakte mit {{ customer.full_name }}
+        </h1>
+    </div>
+</div>
+
+<!-- Kontakt-Timeline -->
+<div class="card">
+    <div class="card-body">
+        <div class="timeline">
+            {% for contact in contacts %}
+            <div class="timeline-item mb-4 pb-4">
+                <div class="d-flex">
+                    <div class="timeline-marker">
+                        <span class="badge bg-info rounded-circle p-3">
+                            {% if contact.channel == 'Telefon' %}
+                                <i class="bi bi-telephone fs-5"></i>
+                            {% elif contact.channel == 'E-Mail' %}
+                                <i class="bi bi-envelope fs-5"></i>
+                            {% elif contact.channel == 'Meeting' %}
+                                <i class="bi bi-calendar-event fs-5"></i>
+                            {% else %}
+                                <i class="bi bi-chat fs-5"></i>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="flex-grow-1 ms-4">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="mb-0">{{ contact.subject or 'Kein Betreff' }}</h5>
+                                    <small class="text-muted">{{ contact.contact_time|datetime_format }}</small>
+                                </div>
+                                <p class="mb-2">
+                                    <span class="badge bg-info">{{ contact.channel }}</span>
+                                    {% if contact.user %}
+                                        <span class="text-muted ms-2">
+                                            <i class="bi bi-person"></i> {{ contact.user.name }}
+                                        </span>
+                                    {% endif %}
+                                </p>
+                                {% if contact.notes %}
+                                <p class="mb-0 text-muted">{{ contact.notes }}</p>
+                                {% endif %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('contacts.contact_detail', contact_id=contact.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Details anzeigen
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-center text-muted py-5">
+                <i class="bi bi-chat-dots fs-1 d-block mb-3"></i>
+                Keine Kontakte vorhanden
+            </p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if pagination.pages > 1 %}
+<nav aria-label="Seitennavigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('customers.customer_contacts', customer_id=customer.id, page=pagination.prev_num) }}">
+                <i class="bi bi-chevron-left"></i> Zurück
+            </a>
+        </li>
+        
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('customers.customer_contacts', customer_id=customer.id, page=page_num) }}">
+                        {{ page_num }}
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('customers.customer_contacts', customer_id=customer.id, page=pagination.next_num) }}">
+                Weiter <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+<div class="text-center mt-3">
+    <a href="{{ url_for('customers.customer_detail', customer_id=customer.id) }}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left"></i> Zurück zu Kundendetails
+    </a>
+</div>
+{% endblock %}

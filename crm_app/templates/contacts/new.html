@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Neuer Kontakt{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('contacts.list_contacts') }}">Kontakte</a></li>
+                <li class="breadcrumb-item active">Neuer Kontakt</li>
+            </ol>
+        </nav>
+        <h1>
+            <i class="bi bi-chat-left-text-fill"></i> Neuen Kontakt erfassen
+        </h1>
+    </div>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Kontaktdaten</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('contacts.new_contact') }}">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="customer_id" class="form-label">Kunde <span class="text-danger">*</span></label>
+                            <select class="form-select" id="customer_id" name="customer_id" required>
+                                <option value="">-- Kunde auswählen --</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer.id }}"
+                                        {% if selected_customer_id == customer.id %}selected{% endif %}>
+                                    {{ customer.full_name }} 
+                                    {% if customer.email %}({{ customer.email }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="channel" class="form-label">Kontaktart <span class="text-danger">*</span></label>
+                            <select class="form-select" id="channel" name="channel" required>
+                                <option value="">-- Kontaktart auswählen --</option>
+                                {% for channel in channels %}
+                                <option value="{{ channel }}">
+                                    {% if channel == 'Telefon' %}
+                                        <i class="bi bi-telephone"></i>
+                                    {% elif channel == 'E-Mail' %}
+                                        <i class="bi bi-envelope"></i>
+                                    {% elif channel == 'Meeting' %}
+                                        <i class="bi bi-calendar-event"></i>
+                                    {% else %}
+                                        <i class="bi bi-chat"></i>
+                                    {% endif %}
+                                    {{ channel }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="contact_date" class="form-label">Datum</label>
+                            <input type="date" class="form-control" id="contact_date" name="contact_date">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="contact_time" class="form-label">Uhrzeit</label>
+                            <input type="time" class="form-control" id="contact_time" name="contact_time">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="user_id" class="form-label">Mitarbeiter</label>
+                        <select class="form-select" id="user_id" name="user_id">
+                            <option value="">-- Kein Mitarbeiter zugeordnet --</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.name }} ({{ user.role }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Betreff</label>
+                        <input type="text" class="form-control" id="subject" name="subject" 
+                               maxlength="255" placeholder="z.B. Produktanfrage, Support, etc.">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notizen</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="5" 
+                                  placeholder="Detaillierte Notizen zum Kontakt..."></textarea>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('contacts.list_contacts') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Abbrechen
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Kontakt speichern
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle"></i> Hinweise
+                </h6>
+                <ul class="mb-0">
+                    <li>Felder mit <span class="text-danger">*</span> sind Pflichtfelder</li>
+                    <li>Datum und Uhrzeit werden mit aktuellen Werten vorausgefüllt</li>
+                    <li>Die Mitarbeiter-Zuordnung ist optional</li>
+                    <li>Notizen können später ergänzt werden</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Kontaktarten</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="bi bi-telephone text-info"></i> <strong>Telefon</strong> - Telefonat
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-envelope text-info"></i> <strong>E-Mail</strong> - E-Mail-Korrespondenz
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-calendar-event text-info"></i> <strong>Meeting</strong> - Persönliches Treffen
+                    </li>
+                    <li class="mb-0">
+                        <i class="bi bi-chat text-info"></i> <strong>Chat</strong> - Online-Chat
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Setze aktuelle Datum/Zeit wenn leer
+    const dateInput = document.getElementById('contact_date');
+    const timeInput = document.getElementById('contact_time');
+    
+    if (!dateInput.value) {
+        const now = new Date();
+        dateInput.value = now.toISOString().split('T')[0];
+    }
+    
+    if (!timeInput.value) {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        timeInput.value = `${hours}:${minutes}`;
+    }
+});
+</script>
+{% endblock %}

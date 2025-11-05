@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Neuer Kunde{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('customers.list_customers') }}">Kunden</a></li>
+                <li class="breadcrumb-item active">Neuer Kunde</li>
+            </ol>
+        </nav>
+        <h1>
+            <i class="bi bi-person-plus"></i> Neuen Kunden anlegen
+        </h1>
+    </div>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Kundendaten</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('customers.new_customer') }}">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="first_name" class="form-label">Vorname <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" 
+                                   value="{{ first_name or '' }}" required maxlength="100">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="last_name" class="form-label">Nachname <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" 
+                                   value="{{ last_name or '' }}" required maxlength="100">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">E-Mail</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ email or '' }}" maxlength="255">
+                            <small class="form-text text-muted">Optional, muss eindeutig sein</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Telefon</label>
+                            <input type="text" class="form-control" id="phone" name="phone" 
+                                   value="{{ phone or '' }}" maxlength="50" 
+                                   placeholder="+43 123 456789">
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('customers.list_customers') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Abbrechen
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Kunde speichern
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle"></i> Hinweise
+                </h6>
+                <ul class="mb-0">
+                    <li>Felder mit <span class="text-danger">*</span> sind Pflichtfelder</li>
+                    <li>Die E-Mail-Adresse muss eindeutig sein</li>
+                    <li>Nach dem Speichern können Sie sofort Bestellungen und Kontakte hinzufügen</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
