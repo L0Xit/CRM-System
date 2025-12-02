@@ -117,27 +117,40 @@ Speichern Sie mit `Strg+X`, dann `Y`, dann `Enter`.
 
 ---
 
-## 🐍 Schritt 5: Virtual Environment einrichten
+## 🐍 Schritt 5: Python-Pakete installieren
 
-1. **In der Bash-Console:**
+Sie haben zwei Optionen:
+
+### 🎯 Option A: Einfach - Global installieren (empfohlen für Schulprojekte)
+
+```bash
+cd ~/crm-system
+pip3.10 install --user --upgrade pip
+pip3.10 install --user -r requirements.txt
+```
+
+**Vorteile:** Schnell, einfach, für ein einzelnes Projekt ausreichend
+
+### 🔧 Option B: Mit Virtual Environment (Best Practice)
 
 ```bash
 cd ~/crm-system
 python3.10 -m venv venv
 source venv/bin/activate
-```
-
-2. **Abhängigkeiten installieren:**
-
-```bash
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-3. **Überprüfen Sie die Installation:**
+**Vorteile:** Saubere Trennung, professioneller, bei mehreren Projekten besser
+
+---
+
+**Überprüfen Sie die Installation:**
 
 ```bash
-pip list
+pip3.10 list  # Bei Option A
+# ODER
+pip list      # Bei Option B (mit aktiviertem venv)
 ```
 
 Sie sollten Flask, SQLAlchemy, etc. sehen.
@@ -148,8 +161,10 @@ Sie sollten Flask, SQLAlchemy, etc. sehen.
 
 ```bash
 cd ~/crm-system
-source venv/bin/activate
-python
+# Falls Sie Option B gewählt haben:
+# source venv/bin/activate
+
+python3.10
 ```
 
 In der Python-Shell:
@@ -191,6 +206,10 @@ exit()
 ```
 
 #### C. Virtualenv:
+
+**Falls Sie Option A gewählt haben (global):** Lassen Sie dieses Feld **LEER**
+
+**Falls Sie Option B gewählt haben (venv):**
 ```
 /home/IHR_USERNAME/crm-system/venv
 ```
@@ -258,8 +277,10 @@ Falls Sie Testdaten hinzufügen möchten:
 
 ```bash
 cd ~/crm-system
-source venv/bin/activate
-python
+# Falls Sie Option B (venv) gewählt haben:
+# source venv/bin/activate
+
+python3.10
 ```
 
 ```python
@@ -314,8 +335,12 @@ exit()
 **Lösung:**
 ```bash
 cd ~/crm-system
-source venv/bin/activate
-pip install --upgrade -r requirements.txt
+# Falls Sie Option B (venv) gewählt haben:
+# source venv/bin/activate
+
+pip3.10 install --user --upgrade -r requirements.txt  # Bei Option A
+# ODER
+pip install --upgrade -r requirements.txt              # Bei Option B
 ```
 
 ### Problem: Datenbank-Fehler
@@ -324,7 +349,10 @@ pip install --upgrade -r requirements.txt
 ```bash
 cd ~/crm-system
 rm crm.db  # Alte DB löschen
-python
+# Falls Sie Option B (venv) gewählt haben:
+# source venv/bin/activate
+
+python3.10
 ```
 
 ```python
@@ -353,8 +381,12 @@ git push
 # Auf PythonAnywhere:
 cd ~/crm-system
 git pull
-source venv/bin/activate
-pip install -r requirements.txt  # Falls neue Pakete
+# Falls Sie Option B (venv) gewählt haben:
+# source venv/bin/activate
+# pip install -r requirements.txt  # Falls neue Pakete
+
+# Bei Option A (global):
+pip3.10 install --user -r requirements.txt  # Falls neue Pakete
 ```
 
 Dann auf der Web-Seite auf **"Reload"** klicken!
